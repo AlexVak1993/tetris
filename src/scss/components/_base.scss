@@ -1,0 +1,30 @@
+* {
+  font-family: $font-main;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.grid {
+  padding: 15px;
+  display: grid;
+  grid-template-columns: 320px 200px;
+  background-color: #f5f5f5;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.game-board {
+  border: 2px solid $clr-black;
+}
+
+.play-button {
+  background-color: #4caf50;
+  font-size: $font-size;
+  padding: 15px 30px;
+  cursor: pointer;
+}
