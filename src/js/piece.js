@@ -1,4 +1,11 @@
 class Piece {
+  x;
+  y;
+  color;
+  shape;
+  ctx;
+  typeId;
+
   constructor(ctx) {
     this.ctx = ctx;
     this.spawn();
@@ -21,6 +28,7 @@ class Piece {
   move(p) {
     this.x = p.x;
     this.y = p.y;
+    this.shape = p.shape;
   }
 
   randomizeTetrominoType(noOfTypes) {

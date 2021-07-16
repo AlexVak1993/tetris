@@ -1,16 +1,31 @@
 class Board {
+  ctx;
+  ctxNext;
+  grid;
+  piece;
+  next;
+  requestId;
+  time;
+
   constructor(ctx, ctxNext) {
     this.ctx = ctx;
     this.ctxNext = ctxNext;
-    this.piece = null;
-    this.next = null;
+    this.init();
+  }
+
+  init() {
+    // board canvas size
+    this.ctx.canvas.width = COLS * BLOCK_SIZE;
+    this.ctx.canvas.height = ROWS * BLOCK_SIZE;
+
+    this.ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
   }
 
   reset() {
     this.grid = this.getEmptyBoard();
     this.piece = new Piece(this.ctx);
     this.piece.setStartPosition();
-    this.getNewPiece;
+    this.getNewPiece();
   }
 
   // create matrix with width and height filled 0
@@ -54,18 +69,20 @@ class Board {
     });
   }
 
-  rotate(p) {
-    let clone = JSON.parse(JSON.stringify(p));
+  rotate(piece) {
+    // Clone with JSON for immutability.
+    let p = JSON.parse(JSON.stringify(piece));
 
+    // Transpose matrix
     for (let y = 0; y < p.shape.length; ++y) {
       for (let x = 0; x < y; ++x) {
         [p.shape[x][y], p.shape[y][x]] = [p.shape[y][x], p.shape[x][y]];
       }
     }
 
-    p.shape.forEach((row) => row.reverse());
-
-    return clone;
+    // Reverse the order of the columns.
+    p.shape.forEach(row => row.reverse());
+    return p;
   }
 
   draw() {
@@ -102,6 +119,17 @@ class Board {
 
     if (lines > 0) {
       account.score += this.getLineClearPoints(lines);
+      account.lines += lines;
+    
+      // If we have reached the lines for next level
+      if (account.lines >= LINES_PER_LEVEL) {
+        // Goto next level
+        account.level++;  
+        // Remove lines so we start working for the next level
+        account.lines -= LINES_PER_LEVEL;
+        // Increase speed of game
+        time.level = LEVEL[account.level];
+      }
     }
   }
 
@@ -129,8 +157,10 @@ class Board {
         return false;
       }
 
-      this.piece = new Piece(this.ctx);
+      this.piece = this.next;
+      this.piece.ctx = this.ctx;
       this.piece.setStartPosition();
+      this.getNewPiece()
     }
 
     return true

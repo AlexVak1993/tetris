@@ -2,17 +2,7 @@ const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 const canvasNext = document.getElementById('next');
 const ctxNext = canvasNext.getContext('2d');
-const time = {start: 0, elapsed: 0, level: 1000};
-
-// board canvas size
-ctx.canvas.width = COLS * BLOCK_SIZE;
-ctx.canvas.height = ROWS * BLOCK_SIZE;
-
-ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
-
-ctxNext.canvas.width = 4 * BLOCK_SIZE;
-ctxNext.canvas.height = 4 * BLOCK_SIZE;
-ctxNext.scale(BLOCK_SIZE, BLOCK_SIZE);
+// const time = {start: 0, elapsed: 0, level: 1000};
 
 moves = {
   [KEY.SPACE]: p => ({...p, y: p.y +1}),
@@ -46,29 +36,56 @@ let account = new Proxy(accountValues, {
 // create board copy
 let board = new Board(ctx, ctxNext);
 addEventListener();
+initNext();
+
+function initNext() {
+  ctxNext.canvas.width = 4 * BLOCK_SIZE;
+  ctxNext.canvas.height = 4 * BLOCK_SIZE;
+  ctxNext.scale(BLOCK_SIZE, BLOCK_SIZE);
+}
 
 function addEventListener() {
-  document.addEventListener("keydown", event => {
-    if (moves[event.keyCode]) {
+  document.addEventListener('keydown', event => {
+    if (event.keyCode === KEY.P) {
+      pause();
+    }
+    if (event.keyCode === KEY.ESC) {
+      gameOver();
+    } else if (moves[event.keyCode]) {
       event.preventDefault();
-  
-      // get new coord of figure
+      // Get new state
       let p = moves[event.keyCode](board.piece);
       if (event.keyCode === KEY.SPACE) {
-        // hard drop
+        // Hard drop
         while (board.valid(p)) {
           account.score += POINTS.HARD_DROP;
           board.piece.move(p);
-          p = moves[KEY.DOWN](board.piece)
-        }
+          p = moves[KEY.DOWN](board.piece);
+        }       
       } else if (board.valid(p)) {
         board.piece.move(p);
         if (event.keyCode === KEY.DOWN) {
-          account.score += POINTS.SOFT_DROP;
+          account.score += POINTS.SOFT_DROP;         
         }
       }
     }
   });
+}
+
+function pause() {
+  if (!requestId) {
+    animate();
+    return;
+  }
+
+  cancelAnimationFrame(requestId);
+  requestId = null;
+  
+  ctx.fillStyle = 'black';
+  ctx.fillRect(1, 3, 8, 1.2);
+  ctx.font = '1px Arial';
+  ctx.fillStyle = 'yellow';
+  ctx.fillText('PAUSED', 3, 4);
 }
 
 function animate(now = 0) {
@@ -94,29 +111,28 @@ function resetGame() {
   account.score = 0;
   account.lines = 0;
   account.level = 0;
-  board.reset();
-  let piece = new Piece(ctx);
-  board.piece = piece;
-  board.piece.setStartPosition();
+  board.reset();  
+  time = { start: 0, elapsed: 0, level: LEVEL[account.level] };
 }
 
 let requestId;
 
 function gameOver() {
   cancelAnimationFrame(requestId);
-  this.ctx.fillStyle = 'black';
-  this.ctx.fillRect(1, 3, 8, 1.2);
-  this.ctx.font = '1px Arial';
-  this.ctx.fillStyle = 'red';
-  this.ctx.fillText('GAME OVER', 1.8, 4);
+  ctx.fillStyle = 'black';
+  ctx.fillRect(1, 3, 8, 1.2);
+  ctx.font = '1px Arial';
+  ctx.fillStyle = 'red';
+  ctx.fillText('GAME OVER', 1.8, 4);
 }
 
 function play() {
   resetGame();
+  time.start = performance.now();
+  // If we have an old game running a game then cancel the old
+  if (requestId) {
+    cancelAnimationFrame(requestId);
+  }
 
-  board.reset();
-  let piece = new Piece(ctx);
-  board.piece = piece;
-  board.piece.setStartPosition();
-  animate()
+  animate();
 }
